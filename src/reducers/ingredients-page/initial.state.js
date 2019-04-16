@@ -4,12 +4,12 @@
  * {
  *     id : '',
  *     name : '',
- *     qty : '',
+ *     quantity : '',
  *     unit: '',
  * }
  */
 export default {
     ingredients: [],
-    isFailed: false,
-    isPending: false,
+    isIngredientsFailed: false,
+    isIngredientsPending: false,
 };

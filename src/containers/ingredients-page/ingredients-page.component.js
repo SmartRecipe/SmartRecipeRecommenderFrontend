@@ -8,13 +8,13 @@ import { withStyles } from '@material-ui/core/styles';
 import CircularProgress from '@material-ui/core/CircularProgress';
 
 import { 
-  addIngredient, 
-  getIngredients, 
-  deleteIngredient,
-} from '../../actions/ingredients-page/ingredients-page.actions';
+  updateUser, 
+} from '../../actions/auth/auth.actions';
 
 import IngredientCardComponent from '../../components/cards/ingredient-card.component';
 import AddIngredientDialog from '../../components/dialogs/add-ingredient-dialog.component';
+
+const newIngredient = { name: "", quantity: "", unit: "" };
 
 /**
  * Main container for ingredients page
@@ -24,12 +24,10 @@ class IngredientsPageContainer extends Component {
     super(props);
 
     this.state = {
-      ingredient: {
-        name: '',
-        qty: '',
-        unit: '',
-      },
+      ingredient: newIngredient,
+      editMode: false,
       showDialog: false,
+      ingredientId: null,
     }
 
     this.onDialogClosed = this.onDialogClosed.bind(this);
@@ -48,24 +46,60 @@ class IngredientsPageContainer extends Component {
   }
 
   onIngredientDeleted(id) {
-    this.props.deleteIngredient(id);
+    let { user } = this.props;
+
+    let { fridge } = user; 
+
+    let { ingredients } = fridge;
+
+    ingredients.splice(id, 1);
+
+    user = {
+      ...user,
+      fridge: {
+        ...fridge,
+        ingredients,
+      },
+    };
+
+    this.props.updateUser(user);
   }
 
   onDialogClosed() {
     this.setState({
       showDialog: false,
-      ingredient: {
-        name: '',
-        qty: '',
-        unit: '',
-      }
+      ingredient: newIngredient
     });
   }
 
   onDialogSubmit(e, ingredient) {
     this.onDialogClosed();
 
-    this.props.addIngredient(ingredient);
+    let { user } = this.props;
+
+    const { editMode, ingredientId } = this.state;
+
+    let { fridge } = user; 
+
+    let { ingredients } = fridge;
+
+    if (editMode) {
+      ingredients[ingredientId] = ingredient;
+    } else {
+      ingredients.push(ingredient);
+    }
+
+    user = {
+      ...user,
+      fridge: {
+        ...fridge,
+        ingredients,
+      },
+    };
+
+    this.props.updateUser(user);
+
+    this.setState({ editMode: false, ingredientId: null });
   }
 
   onDialogFormChange(e) {
@@ -74,7 +108,7 @@ class IngredientsPageContainer extends Component {
     const { target } = e;
 
     switch (target.id) {
-      case 'title':
+      case 'ingredientTitle':
         this.setState({
           ingredient: {
             ...this.state.ingredient,
@@ -82,11 +116,11 @@ class IngredientsPageContainer extends Component {
           }
         });
         break;
-      case 'qty':
+      case 'quantity':
         this.setState({
           ingredient: {
             ...this.state.ingredient,
-            qty: target.value,
+            quantity: target.value,
           }
         });
         break;
@@ -109,12 +143,20 @@ class IngredientsPageContainer extends Component {
   }
 
   onEditIngredientButtonClicked(id) {
-    const ingredient = this.props.allIngredients.filter((ingredient) => ingredient.id === id);
+    let { user } = this.props;
+
+    let { fridge } = user; 
+
+    let { ingredients } = fridge;
+
+    const ingredient = ingredients[id];
 
     this.setState({
       ...this.state,
+      ingredient,
+      editMode: true,
       showDialog: true,
-      ingredient: ingredient[0],
+      ingredientId: id,
     });
   }
 
@@ -141,10 +183,11 @@ class IngredientsPageContainer extends Component {
             alignItems="center"
             xs={6} sm={4} md={3} lg={2} xl={1}>
             <IngredientCardComponent
-              key={currentIngredient.id}
+              id={i}
+              key={i}
               ingredient={currentIngredient}
-              onEditButtonClicked={this.onEditIngredientButtonClicked}
               onDeleteButtonClicked={this.onIngredientDeleted}
+              onEditButtonClicked={this.onEditIngredientButtonClicked}
             />
           </Grid>);
       }
@@ -159,22 +202,27 @@ class IngredientsPageContainer extends Component {
       </Grid>);
   }
 
-  componentDidMount() {
-    this.props.getIngredients();
-  }
-
   render() {
     const { 
+      user,
       classes, 
-      allIngredients,
-      ingredientRequestPending,
+      isUserRequestPending,
     } = this.props;
+
+    const { fridge } = user;
+
+    let allIngredients = [];
+
+    if (fridge) {
+      const { ingredients } = fridge;
+      allIngredients = ingredients;
+    }
 
     const { ingredient, showDialog } = this.state;
 
     const ingredientsGrid = this.getIngredientsGrid(allIngredients);
 
-    const contentClass = ingredientRequestPending ? classes.contentHidden : classes.content;
+    const contentClass = isUserRequestPending ? classes.content : classes.content;
 
     return (
         <div className={contentClass}>
@@ -182,17 +230,18 @@ class IngredientsPageContainer extends Component {
             <AddIcon />
           </Fab>
           {
-            ingredientRequestPending &&
+            isUserRequestPending &&
             <CircularProgress className={classes.progress} thickness={4} size={72}/>
           }
           {
-            <AddIngredientDialog 
+            <AddIngredientDialog
               open={showDialog} 
+              ingredient={ingredient}
               onClose={this.onDialogClosed} 
               onSubmit={this.onDialogSubmit} 
               onFormChange={this.onDialogFormChange}
               onUnitChange={this.onIngredientUnitChange}
-              ingredient={ingredient}/>
+            />
           }
           {
             ingredientsGrid
@@ -238,17 +287,15 @@ IngredientsPageContainer.propTypes = {
 };
 
 const mapStateToProps = state => ({
-  allIngredients: state.ingredientsReducer.ingredients,
+  user: state.authReducer.user,
   currentRoute: state.navigationReducer.currentRoute,
-  ingredientRequestFailed: state.ingredientsReducer.isFailed,
-  ingredientRequestPending: state.ingredientsReducer.isPending,
+  isUserRequestFailed: state.authReducer.isUserRequestFailed,
+  isUserRequestPending: state.authReducer.isUserRequestPending,
 });
 
 
 const mapDispatchToProps = dispatch => ({
-  addIngredient: (ingredient) => dispatch(addIngredient(ingredient)),
-  deleteIngredient: (id) => dispatch(deleteIngredient(id)),
-  getIngredients: () => dispatch(getIngredients()),
+  updateUser: (user) => dispatch(updateUser(user)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(IngredientsPageContainer));

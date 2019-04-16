@@ -8,7 +8,7 @@ import Typography from '@material-ui/core/Typography';
 import FormControl from '@material-ui/core/FormControl';
 import withStyles from '@material-ui/core/styles/withStyles';
 
-import IngredientChipsComponent from '../chips/ingredient-chips.component.js'
+import IngredientListComponent from '../lists/ingredients-list.component';
 
 
 /**
@@ -16,7 +16,8 @@ import IngredientChipsComponent from '../chips/ingredient-chips.component.js'
  */
 class EditRecipeFormComponent extends Component {
   render() {
-    const { 
+    const {
+      user,
       recipe, // recipe 
       classes,
       onSubmit, // submit function passed from parent component
@@ -34,10 +35,13 @@ class EditRecipeFormComponent extends Component {
       ingredients = recipe.ingredients;
     }
 
-    let { allIngredients } = this.props;
+    let allIngredients = [];
 
-    if (!allIngredients || allIngredients === undefined) {
-      allIngredients = [];
+    const { fridge } = user;
+
+    if (fridge) {
+      const { ingredients } = fridge;
+      allIngredients = ingredients;
     }
 
     const showIngredientsDropdown = true ? allIngredients.length > 0 : false;
@@ -61,7 +65,7 @@ class EditRecipeFormComponent extends Component {
             <Input name="description" id="description" value={description} onChange={onFormChange} multiline rows='5' rowsMax='10' autoComplete="description" />
           </FormControl>
           <FormControl margin="normal" required fullWidth>
-            <IngredientChipsComponent ingredients={ingredients} handleDelete={onIngredientDeleted}/>
+            <IngredientListComponent ingredients={ingredients} handleDelete={onIngredientDeleted}/>
           </FormControl>
           {
             showIngredientsDropdown &&
@@ -77,9 +81,9 @@ class EditRecipeFormComponent extends Component {
                 }}
               >
                   {
-                    allIngredients.map(data => {
+                    allIngredients.map((data, id) => {
                       return (
-                        <option key={data.id} value={data.id}>{data.name}</option>
+                        <option key={id} value={id}>{data.name}</option>
                       );
                     })
                   }
@@ -88,7 +92,7 @@ class EditRecipeFormComponent extends Component {
           }
           {
             !showIngredientsDropdown &&
-            <Typography component="p" variant="p">
+            <Typography component="p">
               Please add some ingredients...
             </Typography>
           }
@@ -130,7 +134,7 @@ EditRecipeFormComponent.propTypes = {
 };
 
 const mapStateToProps = state => ({
-  allIngredients: state.ingredientsReducer.ingredients,
+  user: state.authReducer.user,
 });
 
 

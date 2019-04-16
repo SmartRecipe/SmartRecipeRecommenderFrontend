@@ -8,15 +8,23 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 
 import AddIcon from '@material-ui/icons/Add';
 
-import { getIngredients } from '../../actions/ingredients-page/ingredients-page.actions';
-import { addRecipe, getRecipes, deleteRecipe } from '../../actions/recipes-page/recipes-page.actions';
+import { 
+  addRecipe, 
+  getRecipes, 
+  editRecipe,
+  deleteRecipe, 
+  getRecommendedRecipes,
+} from '../../actions/recipes-page/recipes-page.actions';
 
 import RecipeCardComponent from '../../components/cards/recipe-card.component';
 import AddRecipeDialog from '../../components/dialogs/add-recipe-dialog.component';
 import RecipeViewComponent from '../../components/dialogs/recipe-view-dialog.component';
 import RecipeShareComponent from '../../components/dialogs/social-share-dialog.component';
+import AddIngredientDialog from '../../components/dialogs/add-ingredient-dialog.component';
 
 const newRecipe = { name: '', desc: '', instructions: '', ingredients: [], nutVal: {} };
+
+const newIngredient = { name: "", quantity: "", unit: "" };
 
 /**
  * Main Container for recipes page. 
@@ -26,20 +34,25 @@ class RecipesPageContainer extends Component {
     super(props);
 
     this.state = {
+      editMode: false,
+      recipe: newRecipe,
       showShareDialog: false,
       showViewDialog: false,
       showEditDialog: false,
-      recipe: newRecipe,
+      ingredientToAdd: newIngredient,
+      showAddIngredientDialog: false,
     };
 
-    this.onCardActionClicked = this.onCardActionClicked.bind(this);
     this.onDialogSubmit = this.onDialogSubmit.bind(this);
     this.onCardViewClosed = this.onCardViewClosed.bind(this);
     this.onDialogFormChange = this.onDialogFormChange.bind(this);
     this.onAddButtonClicked = this.onAddButtonClicked.bind(this);
+    this.onCardActionClicked = this.onCardActionClicked.bind(this);
     this.onFormIngredientAdded = this.onFormIngredientAdded.bind(this);
     this.onFormIngredientDeleted = this.onFormIngredientDeleted.bind(this);
     this.onRecipeDeleteButtonClicked = this.onRecipeDeleteButtonClicked.bind(this);
+    this.onAddIngredientDialogClosed = this.onAddIngredientDialogClosed.bind(this);
+    this.onAddIngredientDialogSubmit = this.onAddIngredientDialogSubmit.bind(this);
   }
 
   /**
@@ -48,17 +61,44 @@ class RecipesPageContainer extends Component {
    */
   onAddButtonClicked() {
     this.setState({
-      showViewDialog: true,
+      showEditDialog: true,
     });
   } 
 
   onCardViewClosed() {
     this.setState({
-      recipe: newRecipe, 
+      recipe: newRecipe,
       showViewDialog: false,
       showShareDialog: false,
       showEditDialog: false,
     });
+  }
+
+  onAddIngredientDialogClosed() {
+    this.setState({
+      ingredientToAdd: newIngredient,
+      showAddIngredientDialog: false,
+    });
+  }
+
+  onAddIngredientDialogSubmit() {
+      const { ingredientToAdd } = this.state;
+
+      this.onAddIngredientDialogClosed();
+
+      if (ingredientToAdd) {
+        this.setState(state => {
+          const ingredients = [...state.recipe.ingredients];
+          const chipToAdd = ingredientToAdd;
+          ingredients.push(chipToAdd);
+          return {
+            recipe: {
+              ...state.recipe,
+              ingredients,
+            } 
+          };
+        });
+      }
   }
 
   /**
@@ -68,9 +108,15 @@ class RecipesPageContainer extends Component {
    * @return
    */
   onDialogSubmit(e, recipe) {
+    const { editMode } = this.state;
+
     this.onCardViewClosed();
 
-    this.props.addRecipe(recipe);
+    if (editMode) {
+      this.props.editRecipe(recipe);
+    } else { 
+      this.props.addRecipe(recipe);
+    }
   }
 
   /**
@@ -96,7 +142,7 @@ class RecipesPageContainer extends Component {
         this.setState({
           recipe: {
             ...this.state.recipe,
-            short_description: target.value,
+            desc: target.value,
           }
         });
         break;
@@ -104,7 +150,15 @@ class RecipesPageContainer extends Component {
         this.setState({
           recipe: {
             ...this.state.recipe,
-            description: target.value,
+            instructions: target.value,
+          }
+        });
+        break;
+      case 'quantity':
+        this.setState({
+          ingredientToAdd: {
+            ...this.state.ingredientToAdd,
+            quantity: target.value,
           }
         });
         break;
@@ -123,49 +177,39 @@ class RecipesPageContainer extends Component {
     } = this.state.recipe;
 
     const {
-      allIngredients
+      user
     } = this.props;
-
+    
     const id = e.target.value;
 
+    const { fridge } = user;
+
+    let allIngredients = [];
+
+    if (fridge) {
+      const { ingredients } = fridge; 
+      allIngredients = ingredients;
+    }
+
     for (var i = 0; i < currentIngredients.length; i++) {
-      if (currentIngredients[i].id == id) {   // eslint-disable-line
+      if (currentIngredients[i].name == allIngredients[id].name) {   // eslint-disable-line
         return
       }
     }
 
-    this.setState(state => {
-      const ingredients = [...state.recipe.ingredients];
-
-      let chipToAdd = {
-        id: id,
-      };
-
-      for (var i = 0; i < allIngredients.length; i++) {
-        if (allIngredients[i].id == id) {   // eslint-disable-line
-          chipToAdd = allIngredients[i];
-        }
-      }
-
-      ingredients.push(chipToAdd);
-      return {
-        recipe: {
-          ...state.recipe,
-          ingredients,
-        } 
-      };
-    });
+    if (allIngredients[id]) {
+      this.setState({ showAddIngredientDialog: true, ingredientToAdd: allIngredients[id] });
+    }
   }
 
   /**
    * Handles event when ingredient is deleted from a recipe
    * @param  {Object} data Ingredient data
    */
-  onFormIngredientDeleted(data) {
+  onFormIngredientDeleted(id) {
     this.setState(state => {
       const ingredients = [...state.recipe.ingredients];
-      const chipToDelete = ingredients.indexOf(data);
-      ingredients.splice(chipToDelete, 1);
+      ingredients.splice(id, 1);
       return { 
         ...state,
         recipe: {
@@ -181,7 +225,7 @@ class RecipesPageContainer extends Component {
   }
 
   onCardActionClicked(id, action) {
-    const recipe = this.props.recipes.filter((recipe) => recipe.id === id);
+    const recipe = this.props.recipes[id];
 
     switch(action) {
       case 'EDIT':
@@ -189,7 +233,8 @@ class RecipesPageContainer extends Component {
           showEditDialog: true,
           showViewDialog: false,
           showShareDialog: false,
-          recipe: recipe[0],
+          editMode: true,
+          recipe,
         });
         break;
       case 'VIEW':
@@ -197,7 +242,8 @@ class RecipesPageContainer extends Component {
           showViewDialog: true,
           showEditDialog: false,
           showShareDialog: false,
-          recipe: recipe[0],
+          editMode: false,
+          recipe,
         });
         break;
       case 'SHARE':
@@ -205,7 +251,8 @@ class RecipesPageContainer extends Component {
           showShareDialog: true,
           showViewDialog: false,
           showEditDialog: false,
-          recipe: recipe[0],
+          editMode: false,
+          recipe,
         });
         break;
       default:
@@ -226,6 +273,10 @@ class RecipesPageContainer extends Component {
     for (var i = 0; i < totalRecipes; i++) {
       const currentRecipe = recipes[i];
 
+      let isRecommended = false;
+
+      if (currentRecipe.recommended) isRecommended = true;
+
       if ((currentRecipe !== undefined) && (currentRecipe !== null)) {
         recipeItemComponents.push(
           <Grid 
@@ -236,8 +287,10 @@ class RecipesPageContainer extends Component {
             key={"recipe_item_" + i} 
             xs={12} sm={6} md={4} lg={3} xl={3}>
             <RecipeCardComponent
-              key={currentRecipe.id}
+              id={i}
+              key={i}
               recipe={currentRecipe}
+              recommended={isRecommended}
               onCardActionClicked={this.onCardActionClicked}
               onDeleteButtonClicked={this.onRecipeDeleteButtonClicked}
             />
@@ -253,11 +306,24 @@ class RecipesPageContainer extends Component {
   }
 
   componentDidMount() {
+    const { user } = this.props;
+
     this.props.getRecipes();
+
+    if (user) {
+      this.props.getRecommendedRecipes(user);
+    }
   }
 
   render() {
-    const { showShareDialog, showViewDialog, recipe, showEditDialog } = this.state;
+    const { 
+      recipe, 
+      showEditDialog, 
+      showViewDialog, 
+      showShareDialog,
+      ingredientToAdd,
+      showAddIngredientDialog,
+    } = this.state;
 
     const { 
       classes, 
@@ -289,6 +355,16 @@ class RecipesPageContainer extends Component {
               onFormChange={this.onDialogFormChange}
               onIngredientAdded={this.onFormIngredientAdded}
               onIngredientDeleted={this.onFormIngredientDeleted}/>
+          }
+          {
+            <AddIngredientDialog
+              viewOnly={true}
+              ingredient={ingredientToAdd}
+              open={showAddIngredientDialog} 
+              onFormChange={this.onDialogFormChange}
+              onClose={this.onAddIngredientDialogClosed}
+              onSubmit={this.onAddIngredientDialogSubmit} 
+              />
           }
           {
             <RecipeViewComponent
@@ -346,9 +422,9 @@ RecipesPageContainer.propTypes = {
 };
 
 const mapStateToProps = state => ({
+  user: state.authReducer.user,
   recipes: state.recipesReducer.recipes,
   currentRoute: state.navigationReducer.currentRoute,
-  allIngredients: state.ingredientsReducer.ingredients,
   recipesRequestFailed: state.recipesReducer.isFailed,
   recipesRequestPending: state.recipesReducer.isPending,
 });
@@ -356,9 +432,10 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = dispatch => ({
   getRecipes: () => dispatch(getRecipes()),
-  getIngredients: () => dispatch(getIngredients()),
   deleteRecipe: (id) => dispatch(deleteRecipe(id)),
   addRecipe: (recipe) => dispatch(addRecipe(recipe)),
+  editRecipe: (recipe) => dispatch(editRecipe(recipe)),
+  getRecommendedRecipes: (user) => dispatch(getRecommendedRecipes(user)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(RecipesPageContainer));

@@ -3,4 +3,7 @@ export default {
     isSignInPending: false,
     isSignInFailed: false,
     isSignInSuccess: false,
+    isUserRequestPending: false,
+    isUserRequestFailed: false,
+    isUserRequestSuccess: false,
 };

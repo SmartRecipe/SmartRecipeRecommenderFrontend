@@ -27,31 +27,32 @@ export default function ingredientsReducer(state = initialState, action = {}) {
         ingredients,
       };
 
-    // Get all ingredients
-    case actionsIngredients.get:
+    // Update all ingredients
+    case actionsIngredients.update:
       if (action.ingredients !== undefined) {
         return {
           ...state,
-          ingredients: action.ingredients,
-          isPending: false,
-          isFailed: false,
+          user: action.user,
+          isIngredientsPending: false,
+          isIngredientsFailed: false,
         };
       } else {
         return state;
       }
 
     case actionsIngredients.pending:
+      console.log('calling pending');
       return {
         ...state,
-        isPending: true,
-        isFailed: false,
+        isIngredientsPending: true,
+        isIngredientsFailed: false,
       };
 
     case actionsIngredients.failed:
       return {
         ...state,
-        isPending: false,
-        isFailed: true,
+        isIngredientsPending: false,
+        isIngredientsFailed: true,
       };
     
     default:

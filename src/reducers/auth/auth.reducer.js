@@ -1,5 +1,5 @@
 import initialState from './initial.state';
-import { actionsSignIn } from '../../utils/app.constants';
+import { actionsSignIn, actionsUser } from '../../utils/app.constants';
 
 /**
  * Reducer responsible for handling user authentication related information flow
@@ -43,6 +43,31 @@ export default function authReducer(state = initialState, action = {}) {
         isSignInFailed: false,
         isSignInPending: false,
         isSignInSuccess: false,
+      };
+
+    case actionsUser.pending:
+      return {
+        ...state,
+        isUserRequestPending: true,
+        isUserRequestFailed: false,
+        isUserRequestSuccess: false,
+      };
+
+    case actionsUser.failed:
+      return {
+        ...state,
+        isUserRequestPending: false,
+        isUserRequestFailed: true,
+        isUserRequestSuccess: false,
+      };
+
+    case actionsUser.update:
+      return {
+        ...state,
+        user: action.user,
+        isUserRequestPending: false,
+        isUserRequestFailed: false,
+        isUserRequestSuccess: true,
       };
 
     default:

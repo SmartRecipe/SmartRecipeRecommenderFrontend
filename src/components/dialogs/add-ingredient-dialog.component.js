@@ -17,7 +17,7 @@ class AddIngredientDialog extends Component {
     this.state = {
       recipe: {
         name: '',
-        qty: 1,
+        quantity: 1,
         unit: 'lb',
       },
     }
@@ -41,9 +41,10 @@ class AddIngredientDialog extends Component {
   render() {
     const { 
       open, 
-      ingredient,
       onClose,
       onSubmit,
+      viewOnly,
+      ingredient,
       onFormChange,
       onUnitChange,
     } = this.props;
@@ -53,6 +54,7 @@ class AddIngredientDialog extends Component {
         <DialogTitle id="form-dialog-title">Ingredient</DialogTitle>
         <DialogContent>
           <EditIngredientFormComponent 
+            viewOnly={viewOnly}
             ingredient={ingredient} 
             onFormChange={onFormChange}
             onUnitChange={onUnitChange}

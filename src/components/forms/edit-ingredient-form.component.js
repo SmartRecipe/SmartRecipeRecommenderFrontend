@@ -14,35 +14,36 @@ import { ingredientUnits } from '../../utils/app.constants';
 class EditIngredientFormComponent extends Component {
   render() {
     const { 
-      ingredient, // recipe 
       classes,
+      viewOnly, // useful when only quantity can be configured
       onSubmit, // submit function passed from parent component
+      ingredient, // ingredient 
       onFormChange, // callback for handling updates in the form
       onUnitChange,
     } = this.props;
 
-    let title = '', qty = '', unit = ''; 
+    let title = '', quantity = '', unit = ''; 
     
     if (ingredient !== null && ingredient !== undefined && ingredient) {
       title = ingredient.name;
-      qty = ingredient.qty; 
+      quantity = ingredient.quantity; 
       unit = ingredient.unit;
     }
-    
+
     return (
       <div>
         <form className={classes.form} onSubmit={onSubmit}>
           <FormControl margin="normal" required fullWidth>
-            <InputLabel htmlFor="title">Title</InputLabel>
-            <Input id="title" value={title} onChange={onFormChange} name="title" autoComplete="title" autoFocus />
+            <InputLabel htmlFor="ingredientTitle">Name</InputLabel>
+            <Input id="ingredientTitle" value={title} onChange={onFormChange} disabled={viewOnly} name="ingredientTitle" autoComplete="title" autoFocus />
           </FormControl>
           <FormControl margin="normal" required fullWidth>
-            <InputLabel htmlFor="qty">Quantity</InputLabel>
-            <Input name="qty" id="qty" value={qty} onChange={onFormChange} autoComplete="qty" />
+            <InputLabel htmlFor="quantity">Quantity</InputLabel>
+            <Input name="quantity" id="quantity" value={quantity} onChange={onFormChange} autoComplete="quantity" />
           </FormControl>
           <FormControl margin="normal" required fullWidth>
             <InputLabel htmlFor="unit">Unit</InputLabel>
-            <Select id="unit" onClick={onUnitChange} value={unit}>
+            <Select disabled={viewOnly} id="unit" onClick={onUnitChange} value={unit}>
               <option value=""> </option>
               {
                 ingredientUnits.map(data => {

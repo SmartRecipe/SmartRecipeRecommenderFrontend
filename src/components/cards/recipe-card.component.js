@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Card from '@material-ui/core/Card';
 import Avatar from '@material-ui/core/Avatar';
+import Tooltip from '@material-ui/core/Tooltip';
 import { withStyles } from '@material-ui/core/styles';
 import IconButton from '@material-ui/core/IconButton';
 import CardHeader from '@material-ui/core/CardHeader';
@@ -22,8 +23,10 @@ import {
 import EditIcon from '@material-ui/icons/Edit';
 import ShareIcon from '@material-ui/icons/Share';
 import DeleteIcon from '@material-ui/icons/Delete';
+import NewReleasesIcon from '@material-ui/icons/NewReleases';
 import FavoriteIcon from '@material-ui/icons/Favorite';
 import VisibilityIcon from '@material-ui/icons/Visibility';
+
 
 const avatarColors = [
   red[500], blue[500], pink[500], cyan[500], lightBlue[900],
@@ -53,16 +56,16 @@ class RecipeCardComponent extends React.Component {
 
   render() {
     const { 
+      id,
       recipe,
       classes, 
+      recommended,
       onCardActionClicked,
       onDeleteButtonClicked,
     } = this.props;
 
     const {
-      _id: id,
       name: title,
-      ingredients,
       desc : shortDescription,
     } = recipe;
 
@@ -111,6 +114,14 @@ class RecipeCardComponent extends React.Component {
           <IconButton aria-label="Share" onClick={() => onCardActionClicked(id, 'SHARE')}>
             <ShareIcon />
           </IconButton>
+          {
+            recommended && 
+            <Tooltip title="Recommended" aria-label="Add">
+              <IconButton aria-label="Recommended">
+                <NewReleasesIcon className={classes.icon}/>
+              </IconButton>
+            </Tooltip>
+          }
         </CardActions>
       </Card>
     );
@@ -150,6 +161,9 @@ const styles = theme => ({
   expandOpen: {
     transform: 'rotate(180deg)',
   },
+  icon: {
+    color: orange[900],
+  }
 });
 
 RecipeCardComponent.propTypes = {

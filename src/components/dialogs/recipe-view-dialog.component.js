@@ -8,7 +8,7 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 
-import IngredientChipsComponent from '../chips/ingredient-chips.component';
+import IngredientListComponent from '../lists/ingredients-list.component';
 
 /**
  * Dialog which shows recipe in a detailed view
@@ -28,19 +28,19 @@ class RecipeViewCard extends Component {
       ingredients,
     } = recipe;
 
-    const showIngredientChips = (ingredients.length === 0) ? false : true;
+    const showIngredientList = (ingredients.length === 0) ? false : true;
 
     return (
       <Dialog open={open} aria-labelledby="form-dialog-title">
         <DialogTitle id="form-dialog-title">{title}</DialogTitle>
         <DialogContent>
           {
-            showIngredientChips &&
+            showIngredientList &&
             <Typography className={classes.typography} component="h6" variant="h6">Ingredients</Typography>
           }
           {
-            showIngredientChips &&
-            <IngredientChipsComponent ingredients={ingredients}/>
+            showIngredientList &&
+            <IngredientListComponent ingredients={ingredients}/>
           }
           <Typography component="h6" variant="h6" className={classes.typography}>
             Method

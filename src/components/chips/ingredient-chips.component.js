@@ -14,10 +14,10 @@ class IngredientChipsComponent extends React.Component {
     return ( 
       <div>
         {
-          ingredients.map(data => {
+          ingredients.map((data, id) => {
             return (
               <Chip
-                key={data.id}
+                key={id}
                 label={data.name}
                 onDelete={(handleDelete !== undefined) ? () => handleDelete(data) : undefined}
                 className={classes.chip}

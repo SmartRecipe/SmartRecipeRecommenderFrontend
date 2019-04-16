@@ -40,8 +40,8 @@ class IngredientCardComponent extends Component {
   /**
    * When Edit / Delete ingredient menu is closed
    */
-  onMenuClosed(option, id) {
-    const { onEditButtonClicked, onDeleteButtonClicked } = this.props;
+  onMenuClosed(option) {
+    const { id, onEditButtonClicked, onDeleteButtonClicked } = this.props;
 
     switch(option) {
       case menuOptions[0]:
@@ -64,9 +64,8 @@ class IngredientCardComponent extends Component {
     } = this.props;
 
     const {
-      id,
       name: title,
-      qty, 
+      quantity, 
       unit,
     } = ingredient;
 
@@ -74,7 +73,7 @@ class IngredientCardComponent extends Component {
       anchorEl,
     } = this.state;
 
-    const description = `${qty} ${unit}`;
+    const description = `${quantity} ${unit}`;
 
     const menuOpen = Boolean(anchorEl);
 
@@ -107,7 +106,7 @@ class IngredientCardComponent extends Component {
         >
           {
             menuOptions.map(option => (
-              <MenuItem key={option} selected={option === 'Edit'} onClick={() => this.onMenuClosed(option, id)}>
+              <MenuItem key={option} onClick={() => this.onMenuClosed(option)}>
                 {option}
               </MenuItem>
             ))
